@@ -326,6 +326,10 @@ blockquote:after {
   margin-right: 16px;
 }
 
+.mb-10 {
+  margin-bottom: 20px;
+}
+
 .icon-arrow {
   display: inline-block;
   cursor: pointer;

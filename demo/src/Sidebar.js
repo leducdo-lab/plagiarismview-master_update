@@ -8,6 +8,8 @@ import iconClosePopup from '../images/close.png';
 import iconDownArrow from '../images/down-arrow.png';
 import iconUpArrow from '../images/up-arrow.png';
 
+import FormShare from './FormShare';
+
 type T_ManuscriptHighlight = T_Highlight;
 
 type Props = {
@@ -40,17 +42,21 @@ class Sidebar extends PureComponent{
           id: 3,
           typeName: "Internet"
         },
+        
       ],
       valueClick: {
         name: '',
         link: '',
         text: ''
-      }
+      },
+      isRemove: false,
+      item_removes: [],
     }
   }
 
   componentWillReceiveProps(nextProps) {
     let {document_id} = nextProps;
+    localStorage.removeItem('item_removes');
     // let resourceType = []
     // if (data.hasOwnProperty("res") && data.res.s) {
     //   data.res.s.forEach(function (element, index) {
@@ -62,9 +68,40 @@ class Sidebar extends PureComponent{
     //     source: resourceType
     //   })
     // }
+    if (document_id !== 3) {
+      this.setState({
+        isRemove: false,
+        item_removes: [],
+      });
+    }
   }
 
-  handleClick=(element, index)=>()=>{
+  handleClick = (index) => () => {
+    let { item_removes } = this.state;
+
+    let item = item_removes.findIndex(item => item === index);
+    if (item !== -1) {
+      document.getElementById(`i-`+index).classList.remove('fa-check');
+      item_removes.splice(item, 1);
+    } else {
+      item_removes.push(index);
+      document.getElementById(`i-`+index).classList.add('fa-check');
+    }
+    localStorage.setItem('item-removes', JSON.stringify(item_removes));
+    if (item_removes.length > 0) {
+      this.setState({
+        isRemove: true,
+        item_removes: [...item_removes],
+      });
+    } else {
+      this.setState({
+        isRemove: false,
+        item_removes: [...item_removes],
+      });
+    }
+  }
+
+  handleDoubleClick=(element, index)=>()=>{
     var x = document.getElementsByClassName("sidebar__highlight");
     for (let i = 0; i < x.length; i++) {
       x[i].classList.remove('active');
@@ -73,6 +110,7 @@ class Sidebar extends PureComponent{
       document.getElementById('document-popup-primary').remove();
     }
     document.getElementById(index).classList.add('active');
+
     offset = 0;
     if (element.s.length) {
       arrayValue = element;
@@ -165,14 +203,16 @@ class Sidebar extends PureComponent{
         showPopUp,
         showPopUpErr,
         valueClick,
-        source
+        source,
+        isRemove,
     } = this.state;
     const { data, document_id } = this.props;
-    
-    const title = document_id === 0 ? 'Tất cả các nguồn': source[document_id-1].typeName;
+
+    const title = document_id === 0 ? 'Tất cả các nguồn': 
+                  document_id !== 4? source[document_id-1].typeName : 'Chia sẻ tài liệu';
     let percent = document_id === 0 ? parseInt(data.res.r*100)/100 : 0 ;
     let count = 0;
-    const item_docs = document_id !== 0? data.res.s.map((element, index) => {
+    const item_docs = (document_id > 0 && document_id < 4 )? data.res.s.map((element, index) => {
       if(
         element.r && (
           (source[document_id-1].typeName == 'Tài liệu nội bộ' && 
@@ -194,10 +234,12 @@ class Sidebar extends PureComponent{
                   key={index}
                   id={index}
                   className="sidebar__highlight"
-                  onClick={this.handleClick(element, index)}
+                  onDoubleClick={this.handleDoubleClick(element, index)}
+                  onClick={this.handleClick(index)}
                 >
                   <div className="item_document_org clearfix">
                     <div className="float-left">
+                      <i id={`i-`+index} className='fa' aria-hidden="true"></i>&nbsp;&nbsp;
                       {element.n.replace("txt", "pdf")}
                     </div>
                     <div className="float-right">
@@ -208,60 +250,68 @@ class Sidebar extends PureComponent{
               } else return '';
     }) : '';
     percent = count !== 0 ? ( percent /count )/100 : percent;
+    
     return(
       <div id="sidebar1" className="sidebar" style={{ width: "25vw" }} >
         <div className="content-sidebar" >
-          <div className="title__sidebar">{title} ({ data.res ? percent : '' }%)</div>
-          { item_docs !== ''?
-            <ul
-              id={'type-document-' + (document_id-1)}
-              className="sidebar__highlights collapse show"
-            >
-            {item_docs}
-            </ul>
-            :
-            <ul className="sidebar__highlights ">
-              { source ? source.map((type, order) => (
-                <li key={order}>
-                  <div className="title-type" onClick={this.showDetail(order)}>
-                    <span>{ type.typeName }</span>
-                    <img src={iconDownArrow} className="img-fluid" id={'img-down-' + order} />
-                  </div>
-                  <ul
-                    id={'type-document-' + order}
-                    className="sidebar__highlights collapse"
-                  >
-                  {data.hasOwnProperty("res") && data.res.s ? data.res.s.map((element, index) => (
-                    element.r && (
-                      (type.typeName == 'Tài liệu nội bộ' && element['uni-id'] == uni_id && element.private)
-                      || (type.typeName == 'Tài liệu nội bộ trường khác' && element['uni-id'] != uni_id && element.private)
-                      || (!element.private && type.typeName == 'Internet')) ?
-                    <li
-                      key={index}
-                      id={index}
-                      className="sidebar__highlight"
-                      onClick={this.handleClick(element, index)}
+          <div className="title__sidebar">{title} {(document_id !== 4 && data.res) ? `${percent}%` :''}</div>
+          { document_id === 4 ? <FormShare /> :
+            item_docs !== ''?
+              <ul
+                id={'type-document-' + (document_id-1)}
+                className="sidebar__highlights collapse show"
+              >
+              {item_docs}
+              </ul>
+              :
+              <ul className="sidebar__highlights ">
+                { source ? source.map((type, order) => (
+                  <li key={order}>
+                    <div className="title-type" onClick={this.showDetail(order)}>
+                      <span>{ type.typeName }</span>
+                      <img src={iconDownArrow} className="img-fluid" id={'img-down-' + order} />
+                    </div>
+                    <ul
+                      id={'type-document-' + order}
+                      className="sidebar__highlights collapse"
                     >
-                      <div className="item_document_org clearfix">
-                        <div className="float-left">
-                          {element.n.replace("txt", "pdf")}
+                    {data.hasOwnProperty("res") && data.res.s ? data.res.s.map((element, index) => (
+                      element.r && (
+                        (type.typeName == 'Tài liệu nội bộ' && element['uni-id'] == uni_id && element.private)
+                        || (type.typeName == 'Tài liệu nội bộ trường khác' && element['uni-id'] != uni_id && element.private)
+                        || (!element.private && type.typeName == 'Internet')) ?
+                      <li
+                        key={index}
+                        id={index}
+                        className="sidebar__highlight"
+                        onClick={this.handleDoubleClick(element, index)}
+                      >
+                        <div className="item_document_org clearfix">
+                          <div className="float-left">
+                            {element.n.replace("txt", "pdf")}
+                          </div>
+                          <div className="float-right">
+                            <strong>{parseInt(element.r*100)/100} %</strong>
+                          </div>
                         </div>
-                        <div className="float-right">
-                          <strong>{parseInt(element.r*100)/100} %</strong>
-                        </div>
-                      </div>
-                    </li> : ''
-                  )) : ''}
-                  </ul>
-                </li>
-              )) : ''}
-            </ul>
+                      </li> : ''
+                    )) : ''}
+                    </ul>
+                  </li>
+                )) : ''}
+              </ul>
+            
           }
-          <div className="footer px-4">
-            <p>
-              Copyright &copy;<script>document.write(new Date().getFullYear());</script> Dai Hoc Bach Khoa Ha Noi <i className="icon-heart" aria-hidden="true"></i><br/> by <a href="https://soict.hust.edu.vn/" target="_blank">Vien CNTT - TT</a>
-            </p>
+          <div className="mb-10">
+            {document_id !== 0 && isRemove ? <button >Remove</button> : ''}
           </div>
+          { document_id === 0 ?
+              <div className="footer px-4">
+              <p>
+                Copyright &copy;<script></script> Dai Hoc Bach Khoa Ha Noi <i className="icon-heart" aria-hidden="true"></i><br/> by <a href="https://soict.hust.edu.vn/" target="_blank">Vien CNTT - TT</a>
+              </p>
+            </div> : ''  
+          }
         </div>
         { showPopUp ? 
           <div className="item_document_popup" id="document-popup-sidebar">
