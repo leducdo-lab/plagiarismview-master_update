@@ -56,6 +56,7 @@ class Sidebar extends PureComponent{
 
   componentWillReceiveProps(nextProps) {
     let {document_id} = nextProps;
+    localStorage.removeItem('item_removes');
     // let resourceType = []
     // if (data.hasOwnProperty("res") && data.res.s) {
     //   data.res.s.forEach(function (element, index) {
@@ -67,6 +68,12 @@ class Sidebar extends PureComponent{
     //     source: resourceType
     //   })
     // }
+    if (document_id !== 3) {
+      this.setState({
+        isRemove: false,
+        item_removes: [],
+      });
+    }
   }
 
   handleClick = (index) => () => {
@@ -200,7 +207,7 @@ class Sidebar extends PureComponent{
         isRemove,
     } = this.state;
     const { data, document_id } = this.props;
-    
+
     const title = document_id === 0 ? 'Tất cả các nguồn': 
                   document_id !== 4? source[document_id-1].typeName : 'Chia sẻ tài liệu';
     let percent = document_id === 0 ? parseInt(data.res.r*100)/100 : 0 ;
@@ -232,7 +239,7 @@ class Sidebar extends PureComponent{
                 >
                   <div className="item_document_org clearfix">
                     <div className="float-left">
-                      <i id={`i-`+index} className='fas'></i>&nbsp;&nbsp;
+                      <i id={`i-`+index} className='fa' aria-hidden="true"></i>&nbsp;&nbsp;
                       {element.n.replace("txt", "pdf")}
                     </div>
                     <div className="float-right">
@@ -247,7 +254,7 @@ class Sidebar extends PureComponent{
     return(
       <div id="sidebar1" className="sidebar" style={{ width: "25vw" }} >
         <div className="content-sidebar" >
-          <div className="title__sidebar">{title} ({ data.res ? percent : '' }%)</div>
+          <div className="title__sidebar">{title} {(document_id !== 4 && data.res) ? `${percent}%` :''}</div>
           { document_id === 4 ? <FormShare /> :
             item_docs !== ''?
               <ul
@@ -277,7 +284,7 @@ class Sidebar extends PureComponent{
                         key={index}
                         id={index}
                         className="sidebar__highlight"
-                        onClick={this.handleClick(element, index)}
+                        onClick={this.handleDoubleClick(element, index)}
                       >
                         <div className="item_document_org clearfix">
                           <div className="float-left">
@@ -298,12 +305,13 @@ class Sidebar extends PureComponent{
           <div className="mb-10">
             {document_id !== 0 && isRemove ? <button >Remove</button> : ''}
           </div>
-          <div className="footer px-4">
-            <br/>
-            <p>
-              Copyright &copy;<script>document.write(new Date().getFullYear());</script> Dai Hoc Bach Khoa Ha Noi <i className="icon-heart" aria-hidden="true"></i><br/> by <a href="https://soict.hust.edu.vn/" target="_blank">Vien CNTT - TT</a>
-            </p>
-          </div>
+          { document_id === 0 ?
+              <div className="footer px-4">
+              <p>
+                Copyright &copy;<script></script> Dai Hoc Bach Khoa Ha Noi <i className="icon-heart" aria-hidden="true"></i><br/> by <a href="https://soict.hust.edu.vn/" target="_blank">Vien CNTT - TT</a>
+              </p>
+            </div> : ''  
+          }
         </div>
         { showPopUp ? 
           <div className="item_document_popup" id="document-popup-sidebar">

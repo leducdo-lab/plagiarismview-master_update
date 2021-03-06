@@ -10,7 +10,6 @@ class FormShare extends PureComponent {
                             <span className="icon-paper-plane"></span>
                         </div>
                         <input type="text" className="form-control" placeholder="Enter Email Address" />
-                        <button type="submit" className="btn btn-success">Send</button>
                     </div>
                 </form>
             </div>
